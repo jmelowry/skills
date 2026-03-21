@@ -403,6 +403,26 @@ contents via `gh api` first).
 Commit all generated files without cloning the repo. Use `gh api` with the
 contents endpoint. For each file:
 
+**IMPORTANT — safe base64 encoding for Python scripts:**
+
+Never use a bash heredoc or `echo` to base64-encode Python script content directly.
+Shell heredocs interpret escape sequences (e.g. `\n` becomes a real newline inside a
+string literal, causing `SyntaxError: unterminated string literal`).
+
+Instead, use Python to generate the base64:
+
+```bash
+python3 -c "
+import base64
+script = '''<script content here>'''
+print(base64.b64encode(script.encode()).decode())
+" > /tmp/script_b64.txt
+CONTENT=$(cat /tmp/script_b64.txt)
+```
+
+For YAML and Markdown files, heredoc + `base64 -w 0` is fine since they have no
+escape-sequence ambiguity.
+
 ```bash
 # Get current SHA if file exists (needed for updates)
 CURRENT=$(gh api repos/jmelowry/skills/contents/<path> --jq '.sha' 2>/dev/null || echo "")
