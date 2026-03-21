@@ -1,14 +1,14 @@
 ---
 name: op-vault
 description: >
-  Read, create, and manage secrets in 1Password using the op CLI. Use this skill whenever
-  the user wants to get a secret, API key, or credential from 1Password; store a new secret;
-  update an existing item; list what's in a vault; or wire a 1Password secret into another
-  script or workflow. Trigger on phrases like "get the API key from 1password", "store this
-  in the claude vault", "read from op", "inject secrets from 1password", "what's in my
-  claude vault", or any mention of 1Password alongside a secret retrieval or storage task.
-  Also use this skill when another skill or script needs secrets resolved from 1Password
-  before running.
+  Read, create, and manage secrets in the 1Password `claude` vault using the op CLI. Use
+  this skill whenever the user wants to get a secret, API key, or credential from 1Password;
+  store a new secret; update an existing item; list what's in the claude vault; or wire a
+  1Password secret into another script or workflow. Trigger on phrases like "get the API key
+  from 1password", "store this in the claude vault", "read from op", "inject secrets from
+  1password", "what's in my claude vault", or any mention of 1Password alongside a secret
+  retrieval or storage task. Also use this skill when another skill or script needs secrets
+  resolved from 1Password before running. Only operates on the `claude` vault.
 ---
 
 # 1Password Vault Skill (`op-vault`)
@@ -16,7 +16,7 @@ description: >
 Interact with 1Password via the `op` CLI. Covers reading secrets, creating/editing items,
 listing vault contents, and injecting secrets as environment variables into subprocesses.
 
-The default vault for this user is **`claude`**. Use it unless another vault is specified.
+**This skill only operates on the `claude` vault.** Never read from or write to any other vault. If the user references a different vault, clarify that this skill is scoped to `claude` only.
 
 ---
 

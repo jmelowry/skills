@@ -9,6 +9,25 @@ The user provides: worker name, type, model(s), and any special requirements. Cl
 
 ---
 
+## RunPod API Access via 1Password
+
+The RunPod API key is stored in the **`claude`** vault as **`runpod-api`**. Use the `op-vault` skill to retrieve it before making GraphQL API calls.
+
+```bash
+# Read the key directly
+RUNPOD_API_KEY=$(op read "op://claude/runpod-api/credential")
+
+# Or inject it into a script without exposing it in shell history
+RUNPOD_API_KEY="op://claude/runpod-api/credential" \
+  op run -- python3 .github/scripts/update_runpod_template.py
+```
+
+The GraphQL endpoint is `https://api.runpod.io/graphql` — pass the key as `Authorization: Bearer <key>`.
+
+If `op whoami` returns an error, authenticate first (`op signin`) or ensure the 1Password desktop app is open with CLI integration enabled. See the `op-vault` skill for full details.
+
+---
+
 ## Step 1 — Gather Context
 
 Before generating anything, collect:
