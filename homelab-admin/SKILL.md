@@ -128,6 +128,8 @@ kubectl delete application <name> -n argocd
 
 The `resources-finalizer.argocd.argoproj.io` on the Application ensures the namespace and all managed resources are cleaned up. Source code in `apps/<name>/` can remain in the repo.
 
+**Step 4: Remove from Gatus** — after the Application is deleted, remove the service's monitoring entries from `apps/gatus/gatus-config.yaml` so Pushover alerts don't fire for the dead service. There are typically two blocks: the internal svc check (`svc.cluster.local`) and the ingress check (`internal.catbus.lol`). Commit and push to Gitea.
+
 ### Check what ArgoCD would change before pushing
 
 ```bash
