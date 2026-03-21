@@ -85,23 +85,48 @@ kubectl describe pod -n <namespace> <pod-name>
 4. ArgoCD syncs — applies the diff to the cluster
 ```
 
-**Push target:** ArgoCD pulls exclusively from Gitea, not GitHub. Always push to the `origin` remote (Gitea). GitHub is an upstream mirror — pushing there does not trigger a deploy.
+**Push target:** ArgoCD pulls exclusively from Gitea, not GitHub. Always push to the `gitea` remote (not `origin`). GitHub is an upstream mirror — pushing there does not trigger a deploy.
 
 ```bash
 # Confirm the right remote before pushing
-git remote -v   # origin should be gitea.internal.catbus.lol
+git remote -v   # should show gitea.internal.catbus.lol as remote named "gitea"
 
-git push origin main
+git push gitea main
 ```
 
 ### Force an immediate sync (instead of waiting for polling)
 
+The argocd CLI inside the pod requires a login step first — `--auth-token` is unreliable in this setup. Use this two-step pattern:
+
 ```bash
-# Sync a specific app
-kubectl -n argocd exec deploy/argocd-server -- argocd app sync <app-name> --auth-token $(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d)
+# Step 1: log in (stores session in pod)
+ARGOCD_PASS=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d)
+kubectl -n argocd exec deploy/argocd-server -- argocd login localhost:8080 --username admin --password "$ARGOCD_PASS" --plaintext --insecure
+
+# Step 2: sync
+kubectl -n argocd exec deploy/argocd-server -- argocd app sync <app-name> --server localhost:8080 --plaintext
 
 # Or trigger via the ArgoCD UI at https://argocd.internal.catbus.lol
 ```
+
+### Deprecating / removing an application
+
+**Important:** the root-app has `prune: false`, so removing an Application YAML from Git and pushing is NOT enough — ArgoCD will leave the orphaned Application running. You must manually delete the Application CRD after pushing:
+
+```bash
+# 1. Remove the app YAML, commit, push
+git rm apps/argocd/applications/<name>.yaml
+git commit -m "deprecate <name>"
+git push gitea main
+
+# 2. Optionally sync root-app to acknowledge removal (login step above first)
+kubectl -n argocd exec deploy/argocd-server -- argocd app sync root-app --server localhost:8080 --plaintext
+
+# 3. Delete the Application — resources-finalizer cascades to all cluster resources
+kubectl delete application <name> -n argocd
+```
+
+The `resources-finalizer.argocd.argoproj.io` on the Application ensures the namespace and all managed resources are cleaned up. Source code in `apps/<name>/` can remain in the repo.
 
 ### Check what ArgoCD would change before pushing
 
@@ -411,7 +436,6 @@ kubectl logs -n cert-manager deployment/cert-manager --tail=50
 | Home Assistant | `home-assistant` | https://home-assistant.internal.catbus.lol | Smart home |
 | Grafana | `monitoring` | https://grafana.internal.catbus.lol | Metrics dashboards |
 | LibreChat | `librechat` | https://librechat.internal.catbus.lol | LLM interface |
-| OpenWebUI | `openwebui` | https://openwebui.internal.catbus.lol | LLM interface |
 | Gitea | `gitea` | https://gitea.internal.catbus.lol | Git server |
 | Dashy | `dashy` | https://dashy.internal.catbus.lol | Homepage dashboard |
 | Calibre-Web | `calibre-web` | https://calibre-web.internal.catbus.lol | E-book library |
@@ -420,8 +444,9 @@ kubectl logs -n cert-manager deployment/cert-manager --tail=50
 | Media Automation | `media-automation` | — | Sonarr, Radarr, Transmission, NordVPN |
 | RomM | `romm` | https://romm.internal.catbus.lol | ROM library (DB migration issue) |
 | Kokoro | `kokoro` | https://kokoro.internal.catbus.lol | TTS worker |
-| Daily Double | `daily-double` | — | Jeopardy play-along app |
 | Gitea Actions | `gitea-actions` | — | CI runner (self-hosted) |
+| ~~OpenWebUI~~ | ~~`openwebui`~~ | — | Deprecated — code preserved in apps/openwebui/ |
+| ~~Daily Double~~ | ~~`daily-double`~~ | — | Deprecated — code preserved in apps/daily-double/ |
 
 ---
 
@@ -471,7 +496,7 @@ k3s-cluster/
 ## Output Checklist
 
 Before finishing any task, confirm:
-- [ ] Persistent changes are committed to `/Users/jamie/github.com/k3s-cluster` and pushed to **Gitea** (`origin`) — ArgoCD pulls from Gitea, not GitHub; pushing only to GitHub will not deploy
+- [ ] Persistent changes are committed to `/Users/jamie/github.com/k3s-cluster` and pushed to **Gitea** (`gitea` remote, not `origin`) — ArgoCD pulls from Gitea, not GitHub; pushing only to GitHub will not deploy
 - [ ] New app follows the namespace/deployment/service/ingress pattern
 - [ ] New app has an ArgoCD Application in `apps/argocd/applications/`
 - [ ] PVCs have `argocd.argoproj.io/managed-by: argocd` annotation to prevent pruning

@@ -91,6 +91,16 @@ Keep edits **minimal and surgical** — don't rewrite sections that didn't need 
 
 ## Step 4 — Edit the Skill File
 
+**IMPORTANT — always edit the repo copy, not the installed copy.**
+
+Skills are installed from `/Users/jamie/github.com/skills/<skill-name>/SKILL.md` to
+`/Users/jamie/.claude/skills/<skill-name>/skill.md`. Running `install.sh` overwrites
+the installed copy from the repo. If you edit the installed copy first, `install.sh`
+will silently revert your changes.
+
+**Always edit:** `/Users/jamie/github.com/skills/<skill-name>/SKILL.md` (repo)
+**Never edit:** `/Users/jamie/.claude/skills/<skill-name>/skill.md` (installed copy)
+
 Use the Edit tool to make the targeted change.
 
 **Formatting conventions:**
