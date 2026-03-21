@@ -1,0 +1,41 @@
+name: Computer Fun Fact
+
+on:
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: 'Optional topic hint (e.g. "hardware", "history", "programming")'
+        type: string
+        required: false
+
+jobs:
+  fun-fact:
+    name: Generate a computer fun fact
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Generate fun fact
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TOPIC_HINT: ${{ github.event.inputs.topic }}
+        run: python scripts/computer-fun-fact.py
+
+      - name: Job summary
+        if: always()
+        run: |
+          echo "## Fun Fact" >> $GITHUB_STEP_SUMMARY
+          if [ -f output/summary.txt ]; then
+            cat output/summary.txt >> $GITHUB_STEP_SUMMARY
+          fi
