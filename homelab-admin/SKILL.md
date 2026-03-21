@@ -80,9 +80,18 @@ kubectl describe pod -n <namespace> <pod-name>
 
 ```
 1. Edit manifest(s) in /Users/jamie/github.com/k3s-cluster
-2. git add + commit + push to main
+2. git add + commit + push to Gitea (origin: https://gitea.internal.catbus.lol/gitea-admin/k3s-cluster)
 3. ArgoCD detects the change (webhook instant, or within 3h polling)
 4. ArgoCD syncs — applies the diff to the cluster
+```
+
+**Push target:** ArgoCD pulls exclusively from Gitea, not GitHub. Always push to the `origin` remote (Gitea). GitHub is an upstream mirror — pushing there does not trigger a deploy.
+
+```bash
+# Confirm the right remote before pushing
+git remote -v   # origin should be gitea.internal.catbus.lol
+
+git push origin main
 ```
 
 ### Force an immediate sync (instead of waiting for polling)
@@ -462,7 +471,7 @@ k3s-cluster/
 ## Output Checklist
 
 Before finishing any task, confirm:
-- [ ] Persistent changes are committed to `/Users/jamie/github.com/k3s-cluster` and pushed to Gitea — not applied directly with kubectl
+- [ ] Persistent changes are committed to `/Users/jamie/github.com/k3s-cluster` and pushed to **Gitea** (`origin`) — ArgoCD pulls from Gitea, not GitHub; pushing only to GitHub will not deploy
 - [ ] New app follows the namespace/deployment/service/ingress pattern
 - [ ] New app has an ArgoCD Application in `apps/argocd/applications/`
 - [ ] PVCs have `argocd.argoproj.io/managed-by: argocd` annotation to prevent pruning
