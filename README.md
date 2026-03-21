@@ -45,6 +45,18 @@ Claude reads the skill file and follows its instructions.
 
 ## Skills
 
+### `para-inbox`
+
+PARA method inbox for Notion. Classifies and files any kind of input into the correct location in the PARA workspace — ideas, tasks, resources, project notes, links.
+
+- Fetches a **live index** of the workspace structure at invocation time (no stale hardcoded maps)
+- Decision tree + signal words classify input to the right pillar and sub-page automatically
+- Ships with `scripts/para_index.py` — a standalone CLI for printing the full PARA tree
+
+**Invoke with:** `"I have an idea..."`, `"remember this"`, `"file this under..."`, `"inbox this"`
+
+---
+
 ### `project-scaffold`
 
 Scaffolds a new project with the full two-surface development workflow:
@@ -59,6 +71,54 @@ Scaffolds a new project with the full two-surface development workflow:
 **Invoke with:** `use the project-scaffold skill to set up this project`
 
 The skill asks for project context before generating anything — no placeholders.
+
+---
+
+### `notion-tts`
+
+Converts a Notion page into a spoken-word MP3 via ElevenLabs and attaches it directly to that page as an audio block. Full voice library with vibe-based selection (`"ted talk"`, `"documentary"`, `"calm"`), chunking for long pages, and a browser-based voice preview server.
+
+**Invoke with:** `"read this page aloud"`, `"turn this Notion page into audio"`, `"make a podcast version of this"`
+
+---
+
+### `homelab-admin`
+
+Full sysadmin skill for a k3s homelab cluster. Covers health checks, GitOps deployments via ArgoCD, pod troubleshooting, adding new applications, log inspection, and deprecation workflows. Knows the full cluster topology, ingress patterns, TLS setup, and the Gitea → ArgoCD push flow.
+
+**Invoke with:** any cluster operation — `"deploy X"`, `"why is Y crashing"`, `"add a new app"`, `"check cluster health"`
+
+---
+
+### `job`
+
+Deploys an unsupervised background job to GitHub Actions without tying it to your local machine. Classifies the task as a Script Worker or Agentic Runner, generates the workflow YAML (and supporting scripts), commits to the repo via `gh api`, and tracks it in the workflow inventory.
+
+**Invoke with:** `"run this on a schedule"`, `"deploy this as a background job"`, `"run this autonomously"`
+
+---
+
+### `runpod-worker`
+
+Builds, containerizes, and deploys a RunPod serverless worker end-to-end. Covers handler scaffolding, model loading, streaming responses, network volume patterns, Dockerfile layer optimization, GitHub Actions CI/CD to GHCR, and RunPod template management via GraphQL API. Supports image generation (SDXL/FLUX/RealVisXL), TTS, and text generation workers.
+
+**Invoke with:** `"build a RunPod worker for..."`, `"deploy this model to RunPod"`
+
+---
+
+### `op-vault`
+
+Reads, creates, and manages secrets in the 1Password `claude` vault using the `op` CLI. Used directly or as a dependency by other skills that need secrets resolved at runtime.
+
+**Invoke with:** `"get the API key from 1Password"`, `"store this in the claude vault"`, `"what's in my claude vault"`
+
+---
+
+### `learn-by-doing`
+
+After completing a task, extracts what was learned and revises the relevant skill file, then re-installs. Keeps skills up to date with real-world lessons without a separate documentation step. Also triggers proactively when a task surfaces a non-obvious fix that belongs in a skill.
+
+**Invoke with:** `"learn from that"`, `"update the skill"`, `"remember that for next time"`
 
 ---
 
