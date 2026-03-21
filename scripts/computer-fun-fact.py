@@ -19,8 +19,7 @@ def main():
     if args.dry_run:
         fact = "[DRY RUN] Did you know? The first computer bug was an actual bug — a moth found in a relay of the Harvard Mark II in 1947."
         print(fact)
-        (output_dir / "summary.txt").write_text(fact + "
-")
+        (output_dir / "summary.txt").write_text(fact + chr(10))
         return
 
     api_key = os.environ.get("ANTHROPIC_API_KEY")
@@ -33,9 +32,9 @@ def main():
     topic_clause = f" Focus on something related to: {topic_hint}." if topic_hint else ""
 
     prompt = (
-        f"Give me one genuinely surprising and delightful fun fact about computers, "
+        "Give me one genuinely surprising and delightful fun fact about computers, "
         f"programming history, or technology.{topic_clause} "
-        f"Keep it to 2–3 sentences. Start directly with the fact — no preamble like 'Here's a fun fact'."
+        "Keep it to 2-3 sentences. Start directly with the fact - no preamble like Here is a fun fact."
     )
 
     message = client.messages.create(
@@ -47,8 +46,7 @@ def main():
     fact = message.content[0].text.strip()
 
     print(fact)
-    (output_dir / "summary.txt").write_text(fact + "
-")
+    (output_dir / "summary.txt").write_text(fact + chr(10))
 
 if __name__ == "__main__":
     main()
