@@ -80,19 +80,24 @@ kubectl describe pod -n <namespace> <pod-name>
 
 ```
 1. Edit manifest(s) in /Users/jamie/github.com/k3s-cluster
-2. git add + commit + push to Gitea (origin: https://gitea.internal.catbus.lol/gitea-admin/k3s-cluster)
-3. ArgoCD detects the change (webhook instant, or within 3h polling)
+2. git add + commit + push to both remotes
+3. ArgoCD detects the change from Gitea (webhook instant, or within 3h polling)
 4. ArgoCD syncs — applies the diff to the cluster
 ```
 
-**Push target:** ArgoCD pulls exclusively from Gitea, not GitHub. Always push to the `gitea` remote (not `origin`). GitHub is an upstream mirror — pushing there does not trigger a deploy.
+**Two remotes — both should be pushed to:**
+
+| Remote | URL | Purpose |
+|--------|-----|---------|
+| `gitea` | `https://gitea.internal.catbus.lol/gitea-admin/k3s-cluster.git` | **Primary — ArgoCD source of truth** |
+| `github` | `https://github.com/jmelowry/k3s-cluster.git` | Backup mirror only — does NOT trigger deploys |
 
 ```bash
-# Confirm the right remote before pushing
-git remote -v   # should show gitea.internal.catbus.lol as remote named "gitea"
-
-git push gitea main
+# Standard push — always push gitea first (ArgoCD), then github as backup
+git push gitea main && git push github main
 ```
+
+Gitea is the authoritative source. GitHub is a backup mirror. If Gitea is unreachable, push to GitHub anyway to preserve history — but ArgoCD won't pick it up until Gitea is restored.
 
 ### Force an immediate sync (instead of waiting for polling)
 
@@ -495,10 +500,37 @@ k3s-cluster/
 
 ---
 
+## Step 8 — Changelog
+
+All significant changes are logged in `CHANGELOG.md` at the repo root. Append an entry after completing any fix, deployment, or infrastructure change.
+
+**Format:**
+```markdown
+## YYYY-MM-DD
+
+### <verb> — <short description>
+
+**Root cause:** (for fixes) what caused the problem.
+
+**What changed:** bullet list — manifests edited, kubectl commands run,
+external systems touched (Cloudflare, Tailscale admin, etc.).
+
+**Commit:** `<sha>` (if applicable)
+```
+
+**Warrants an entry:** bug fixes, new apps deployed, infrastructure changes (Tailscale, DNS, TLS, ingress), dependency upgrades, anything requiring manual intervention outside GitOps.
+
+**Doesn't need one:** routine ArgoCD syncs, cosmetic cleanup, adding comments.
+
+Always commit `CHANGELOG.md` together with (or immediately after) the related changes.
+
+---
+
 ## Output Checklist
 
 Before finishing any task, confirm:
-- [ ] Persistent changes are committed to `/Users/jamie/github.com/k3s-cluster` and pushed to **Gitea** (`gitea` remote, not `origin`) — ArgoCD pulls from Gitea, not GitHub; pushing only to GitHub will not deploy
+- [ ] Persistent changes are committed and pushed to both remotes: `git push gitea main && git push github main` — Gitea triggers ArgoCD, GitHub is backup-only
+- [ ] `CHANGELOG.md` updated with an entry for any significant change
 - [ ] New app follows the namespace/deployment/service/ingress pattern
 - [ ] New app has an ArgoCD Application in `apps/argocd/applications/`
 - [ ] PVCs have `argocd.argoproj.io/managed-by: argocd` annotation to prevent pruning
