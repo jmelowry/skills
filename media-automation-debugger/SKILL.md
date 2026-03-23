@@ -127,9 +127,27 @@ kubectl logs -n media-automation deployment/sabnzbd -c sabnzbd --tail=50
 # Shell in
 kubectl exec -it -n media-automation deployment/sabnzbd -c sabnzbd -- /bin/sh
 
-# Check disk space (downloads go to /mnt/kobol/downloads/ on the node)
-kubectl exec -n media-automation deployment/sabnzbd -c sabnzbd -- df -h /downloads
+# Check disk space (downloads go to /data/downloads/ inside the pod, backed by /mnt/kobol/video-nfs on the node)
+kubectl exec -n media-automation deployment/sabnzbd -c sabnzbd -- df -h /data
 ```
+
+**IMPORTANT — SABnzbd `FileExistsError: File exists: '/data'` every ~20 seconds:**
+
+This error appears in logs as:
+```
+ERROR Failed making (/data/downloads/complete)
+FileExistsError: [Errno 17] File exists: '/data'
+```
+
+It means SABnzbd's periodic directory check is calling `os.path.exists('/data')` and getting False (because the long-running process has a stale NFS handle from a prior NFS hiccup), then failing when it tries `os.mkdir('/data')` because the path does actually exist. Running `kubectl exec` to test `os.path.exists` manually will show True — the stale state only affects the running process, not fresh exec sessions.
+
+**Fix: restart the pod.** The stale NFS handle clears on restart.
+```bash
+kubectl rollout restart deployment/sabnzbd -n media-automation
+kubectl rollout status deployment/sabnzbd -n media-automation
+```
+
+The NFS mount for SABnzbd (`/mnt/kobol/video-nfs` → `/data` in the pod) uses `soft` mount option, which means NFS hiccups propagate as errors instead of hangs. Any brief NFS interruption can leave the process in this state.
 
 ---
 
