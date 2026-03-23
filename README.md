@@ -122,6 +122,30 @@ After completing a task, extracts what was learned and revises the relevant skil
 
 ---
 
+### `update-dashboard`
+
+Refreshes the Notion work dashboard as a weekly knowledge hub — surfaces new captures from the PARA inbox, recent ideas, research docs, and reference material created or updated this week.
+
+**Invoke with:** `"update my dashboard"`, `"refresh my dashboard"`, `"what came in this week"`, `"weekly dashboard refresh"`
+
+---
+
+### `tailscale-debugger`
+
+Diagnoses and fixes Tailscale networking issues in the catbus homelab. Covers the most common failure (asymmetric routing via `pve`'s subnet advertisement), subnet route conflicts, DNS/MagicDNS problems, and access to local-network services from the tailnet.
+
+**Invoke with:** any Tailscale connectivity issue — services unreachable via local IP but reachable via Tailscale IP, routing weirdness, `192.168.0.x` / MetalLB `192.168.0.200` access problems
+
+---
+
+### `media-automation-debugger`
+
+Debugger and ops skill for the media-automation stack on the catbus k3s cluster. Covers Sonarr, Radarr, Prowlarr, SABnzbd, NordVPN/Jackett, and the Jellyfin family-sync cron. Knows the NordVPN sidecar pattern, VPN connectivity checks, download client issues, and indexer problems. Extends `homelab-admin`.
+
+**Invoke with:** any media stack issue — `"why isn't SABnzbd downloading"`, `"Sonarr can't find releases"`, `"Jackett indexers failing"`, `"jellyfin sync didn't run"`
+
+---
+
 ## The Workflow Pattern
 
 These skills are built around a two-surface AI development workflow:
