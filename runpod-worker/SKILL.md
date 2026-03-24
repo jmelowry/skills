@@ -734,6 +734,14 @@ jobs:
 
 Produce this shared helper at `.github/scripts/update_runpod_template.py`. It fetches the current template (preserving all fields), upserts any secrets into the env array, and updates only the image name — so the RunPod UI is never the source of truth for config.
 
+**IMPORTANT — three RunPod GraphQL gotchas (all confirmed by hitting them in production):**
+
+1. **RunPod blocks `Python-urllib` User-Agent with HTTP 403.** `curl` works; Python's `urllib.request` doesn't without an explicit header. Always add `"User-Agent": "curl/7.88.1"` to every request. Verify locally with Python before pushing — don't trust a passing `curl` test.
+
+2. **`podTemplates` has no filter argument.** `podTemplates(ids: [$id])` raises `Unknown argument "ids"`. Fetch all templates and filter in Python: `[t for t in all_templates if t["id"] == TEMPLATE_ID]`.
+
+3. **Mutation input type is `SaveTemplateInput!`, not `PodTemplateInput!`.** Using the wrong type raises a GraphQL validation error at runtime.
+
 ```python
 # .github/scripts/update_runpod_template.py
 """
@@ -769,6 +777,8 @@ def graphql(query: str, variables: dict | None = None) -> dict:
         headers={
             "Content-Type": "application/json",
             "Authorization": f"Bearer {API_KEY}",
+            # RunPod blocks Python's default User-Agent (Python-urllib/3.x) with 403.
+            "User-Agent": "curl/7.88.1",
         },
     )
     with urllib.request.urlopen(req) as resp:
@@ -787,10 +797,11 @@ def upsert_env(env_list: list[dict], updates: dict) -> list[dict]:
 
 
 # 1. Fetch current template
+# NOTE: podTemplates has no filter argument — fetch all and match by id in Python.
 fetch_q = """
-query GetTemplate($id: String!) {
+{
   myself {
-    podTemplates(ids: [$id]) {
+    podTemplates {
       id
       name
       imageName
@@ -806,8 +817,9 @@ query GetTemplate($id: String!) {
   }
 }
 """
-result = graphql(fetch_q, {"id": TEMPLATE_ID})
-templates = result["data"]["myself"]["podTemplates"]
+result = graphql(fetch_q)
+all_templates = result["data"]["myself"]["podTemplates"]
+templates = [t for t in all_templates if t["id"] == TEMPLATE_ID]
 if not templates:
     print(f"Template {TEMPLATE_ID} not found", file=sys.stderr)
     sys.exit(1)
@@ -821,7 +833,7 @@ updated_env = upsert_env(tmpl.get("env") or [], INJECT_ENV)
 
 # 3. Mutate — preserve all fields, update only imageName (and env)
 save_q = """
-mutation SaveTemplate($input: PodTemplateInput!) {
+mutation SaveTemplate($input: SaveTemplateInput!) {
   saveTemplate(input: $input) {
     id
     imageName
