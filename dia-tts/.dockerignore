@@ -1,0 +1,13 @@
+PROMPT.md
+README.md
+SKILL.md
+test_local.py
+tests/
+scripts/
+.github/
+build_and_push.sh
+*.pyc
+__pycache__/
+.git
+*.wav
+*.mp3

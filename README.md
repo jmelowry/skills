@@ -98,6 +98,16 @@ Deploys an unsupervised background job to GitHub Actions without tying it to you
 
 ---
 
+### `dia-tts`
+
+Generates realistic multi-speaker dialogue audio using Dia2-1B (Nari Labs) deployed on a RunPod serverless endpoint. Supports `[S1]`/`[S2]` speaker tags, nonverbal cues `(laughs)`, `(sighs)`, etc., seeded generation for reproducibility, and voice cloning via reference WAVs. Also acts as a **TTS primitive** for other skills — call `scripts/generate.py` directly to get audio without reimplementing the RunPod API.
+
+The `dia-tts/` directory contains both the skill definition and the full RunPod worker (Dockerfile, handler, CI/CD). See `dia-tts/README.md` for deployment instructions.
+
+**Invoke with:** `"generate audio of this script"`, `"synthesize this dialogue"`, `"TTS this"`, `"make this into audio"`
+
+---
+
 ### `runpod-worker`
 
 Builds, containerizes, and deploys a RunPod serverless worker end-to-end. Covers handler scaffolding, model loading, streaming responses, network volume patterns, Dockerfile layer optimization, GitHub Actions CI/CD to GHCR, and RunPod template management via GraphQL API. Supports image generation (SDXL/FLUX/RealVisXL), TTS, and text generation workers.
@@ -135,6 +145,14 @@ Refreshes the Notion work dashboard as a weekly knowledge hub — surfaces new c
 Diagnoses and fixes Tailscale networking issues in the catbus homelab. Covers the most common failure (asymmetric routing via `pve`'s subnet advertisement), subnet route conflicts, DNS/MagicDNS problems, and access to local-network services from the tailnet.
 
 **Invoke with:** any Tailscale connectivity issue — services unreachable via local IP but reachable via Tailscale IP, routing weirdness, `192.168.0.x` / MetalLB `192.168.0.200` access problems
+
+---
+
+### `omada-debugger`
+
+Diagnoses and fixes TP-Link Omada WiFi issues in the shaffer home network. Covers WiFi drops, sticky clients (RSSI thresholds), AP health metrics, channel interference, and range extender management. Knows the full network topology, all 3 APs, and how to use the Omada API via the `tplink-omada-client` Python library. Reads credentials from 1Password automatically.
+
+**Invoke with:** `"wifi is dropping"`, `"clients have weak signal"`, `"disable extender"`, `"enable extender"`, `"check AP health"`, `"audit wifi clients"`
 
 ---
 
