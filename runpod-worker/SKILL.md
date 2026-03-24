@@ -554,6 +554,8 @@ if __name__ == "__main__":
 - Use `HF_HUB_DISABLE_XET=1` env var if you hit segfaults on XET transfer
 - CivitAI: authenticate via `Authorization: Bearer {CIV_API_KEY}` header or `?token=` query param — key comes from env, never hardcoded
 
+**IMPORTANT — Lazy-loaded assets must be explicitly pre-downloaded at build time**: Model initialisation (e.g. `KPipeline(lang_code='a')`) typically only downloads the base model weights. Per-asset files like voice packs (.pt files), speaker embeddings, or language-specific weights are lazy-loaded on first inference. At runtime on RunPod, the worker may have no HuggingFace Hub access (firewalled, rate-limited, or transient failure), causing inference to fail with a cache-miss error even though the model itself loaded. Fix: in `download_model.py`, explicitly call `hf_hub_download(repo_id=..., filename=...)` for every asset the worker will use — don't rely on inference-time discovery to trigger downloads.
+
 ---
 
 ## Step 7 — R2 Upload Utility
