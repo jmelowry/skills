@@ -18,7 +18,7 @@ ENV PYTHONUNBUFFERED=1 \
 RUN ln -sf /usr/bin/python3 /usr/bin/python
 
 # ── PyTorch — isolated layer (rarely changes, ~2.5 GB) ────────────────────────
-# hadolint ignore=DL3013
+# hadolint ignore=DL3013,DL3059
 RUN pip install --no-cache-dir \
     torch torchaudio \
     --index-url https://download.pytorch.org/whl/cu128
