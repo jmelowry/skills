@@ -23,11 +23,15 @@ RUN pip install --no-cache-dir \
     torch torchaudio \
     --index-url https://download.pytorch.org/whl/cu128
 
+# ── Additional dependencies (must come before dia2 verify) ────────────────────
+COPY requirements.txt .
+# hadolint ignore=DL3013,DL3059
+RUN pip install --no-cache-dir -r requirements.txt
+
 # ── dia2 ──────────────────────────────────────────────────────────────────────
 # pip install (git URL or local path) produces an empty UNKNOWN-0.0.0 wheel
 # because pip's build isolation can't resolve torch>=2.8.0 (not on PyPI).
 # dia2 is pure Python — copy the package directory directly to site-packages.
-# Separate layer from PyTorch so the ~2.5 GB torch layer stays cached on rebuilds.
 # hadolint ignore=DL3059
 RUN git clone --depth=1 https://github.com/nari-labs/dia2.git /tmp/dia2-src \
     && cp -r /tmp/dia2-src/dia2 \
@@ -36,11 +40,6 @@ RUN git clone --depth=1 https://github.com/nari-labs/dia2.git /tmp/dia2-src \
 
 # Verify the import works before the expensive model download.
 RUN python3 -c "from dia2 import Dia2; print('[verify] dia2 import OK')"
-
-# ── Additional dependencies ───────────────────────────────────────────────────
-COPY requirements.txt .
-# hadolint ignore=DL3013,DL3059
-RUN pip install --no-cache-dir -r requirements.txt
 
 # ── Bake model weights at build time (~2 GB, isolated layer) ──────────────────
 # HF_TOKEN is injected as a BuildKit secret and never appears in any image layer.
