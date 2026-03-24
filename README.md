@@ -108,6 +108,16 @@ The `dia-tts/` directory contains both the skill definition and the full RunPod 
 
 ---
 
+### `kokoro-tts`
+
+Generates multi-speaker speech audio using Kokoro-82M (Apache 2.0) deployed on a RunPod serverless endpoint. Supports 20+ voice presets (American and British English, male and female), single-speaker and multi-speaker segment modes, MP3/WAV output, and speed control. Better suited than dia-tts for long-form content and named-character assignments; dia-tts is better for naturalistic conversational dialogue.
+
+The `kokoro-tts/` directory contains both the skill definition and the full RunPod worker (Dockerfile, handler, CI/CD).
+
+**Invoke with:** `"synthesize this narration"`, `"generate audio with multiple voices"`, `"TTS this with a British accent"`
+
+---
+
 ### `runpod-worker`
 
 Builds, containerizes, and deploys a RunPod serverless worker end-to-end. Covers handler scaffolding, model loading, streaming responses, network volume patterns, Dockerfile layer optimization, GitHub Actions CI/CD to GHCR, and RunPod template management via GraphQL API. Supports image generation (SDXL/FLUX/RealVisXL), TTS, and text generation workers.
