@@ -48,6 +48,9 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     needs: unit-tests
+    permissions:
+      contents: read
+      packages: write
     outputs:
       sha_tag: ghcr.io/${{ github.repository_owner }}/dia-tts:sha-${{ github.sha }}
     steps:
