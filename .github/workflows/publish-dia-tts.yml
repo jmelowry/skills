@@ -6,6 +6,7 @@ on:
     paths:
       - "dia-tts/**"
       - ".github/workflows/publish-dia-tts.yml"
+      - ".github/scripts/update_runpod_template.py"
 
 jobs:
   lint:
