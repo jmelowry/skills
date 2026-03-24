@@ -24,6 +24,25 @@ RUNPOD_API_KEY="op://claude/runpod-api/credential" \
 
 The GraphQL endpoint is `https://api.runpod.io/graphql` — pass the key as `Authorization: Bearer <key>`.
 
+**IMPORTANT — REST API domain is `api.runpod.ai`, not `api.runpod.io`:**
+
+Serverless REST calls (`/v2/{endpoint}/run`, `/v2/{endpoint}/status/{id}`) must go to `https://api.runpod.ai/v2/`, not `https://api.runpod.io/v2/`. Using `.io` returns 404 for all REST endpoints, including valid ones. The RunPod Python SDK confirms the correct base: `runpod.endpoint_url_base` resolves to `api.runpod.ai`. The GraphQL management API remains at `api.runpod.io/graphql` — only the serverless job submission REST API uses `.ai`.
+
+**IMPORTANT — RO API keys are sufficient for serverless job submission:**
+
+A scoped `RO` API key created via the `createApiKey` GraphQL mutation is enough to submit jobs and poll status on serverless endpoints. Use the `rawKey` field on `ApiKeyOut` to capture the secret (only available at creation time):
+
+```graphql
+mutation {
+  createApiKey(input: { permissions: "RO" }) {
+    id
+    rawKey   # full key string — only returned on creation
+  }
+}
+```
+
+`RO` keys cannot manage endpoints, templates, or billing. Always use a dedicated `RO` key in deployed applications rather than the admin `RW` key.
+
 If `op whoami` returns an error, authenticate first (`op signin`) or ensure the 1Password desktop app is open with CLI integration enabled. See the `op-vault` skill for full details.
 
 ---
