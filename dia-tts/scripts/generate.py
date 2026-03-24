@@ -50,7 +50,7 @@ def resolve_secret(env_key: str, op_ref: str) -> str:
         sys.exit(1)
     except subprocess.CalledProcessError as e:
         print(f"Error: could not read {op_ref} from 1Password: {e.stderr.strip()}", file=sys.stderr)
-        print(f"  Ensure 'op' is authenticated and the item exists in the claude vault.", file=sys.stderr)
+        print("  Ensure 'op' is authenticated and the item exists in the claude vault.", file=sys.stderr)
         sys.exit(1)
 
 

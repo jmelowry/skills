@@ -43,7 +43,7 @@ def main() -> None:
         return
 
     # Mock runpod.serverless.start so importing handler doesn't try to connect
-    from unittest.mock import MagicMock, patch
+    from unittest.mock import patch
 
     with patch("runpod.serverless.start"):
         from handler import handler
