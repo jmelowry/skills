@@ -33,6 +33,7 @@ def graphql(query: str, variables: dict | None = None) -> dict:
         headers={
             "Content-Type": "application/json",
             "Authorization": f"Bearer {API_KEY}",
+            "User-Agent": "curl/7.88.1",
         },
     )
     with urllib.request.urlopen(req) as resp:
@@ -49,11 +50,11 @@ def upsert_env(env_list: list[dict], updates: dict) -> list[dict]:
     return [{"key": k, "value": v} for k, v in env.items()]
 
 
-# 1. Fetch current template
+# 1. Fetch current template (podTemplates has no id filter — fetch all, match by id)
 fetch_q = """
-query GetTemplate($id: String!) {
+{
   myself {
-    podTemplates(ids: [$id]) {
+    podTemplates {
       id
       name
       imageName
@@ -69,8 +70,9 @@ query GetTemplate($id: String!) {
   }
 }
 """
-result = graphql(fetch_q, {"id": TEMPLATE_ID})
-templates = result["data"]["myself"]["podTemplates"]
+result = graphql(fetch_q)
+all_templates = result["data"]["myself"]["podTemplates"]
+templates = [t for t in all_templates if t["id"] == TEMPLATE_ID]
 if not templates:
     print(f"Template {TEMPLATE_ID} not found", file=sys.stderr)
     sys.exit(1)
@@ -83,7 +85,7 @@ updated_env = upsert_env(tmpl.get("env") or [], INJECT_ENV)
 
 # 2. Mutate — preserve all fields, update only imageName (and env)
 save_q = """
-mutation SaveTemplate($input: PodTemplateInput!) {
+mutation SaveTemplate($input: SaveTemplateInput!) {
   saveTemplate(input: $input) {
     id
     imageName
