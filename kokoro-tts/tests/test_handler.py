@@ -119,11 +119,12 @@ def test_handler_oom_yields_oom_error():
     if torch is None:
         return
     h = _fresh_handler()
-    mock_pipeline = MagicMock()
-    mock_pipeline.__call__ = MagicMock(side_effect=torch.cuda.OutOfMemoryError("fake OOM"))
+    # side_effect on the MagicMock itself makes it raise when called as pipeline(...)
+    mock_pipeline = MagicMock(side_effect=torch.cuda.OutOfMemoryError("fake OOM"))
 
     with patch.object(h, "_get_pipeline", return_value=mock_pipeline):
-        results = list(h.handler({"id": "t-7", "input": {"text": "Hello."}}))
+        # Use wav to avoid hitting ffmpeg (not installed on CI runners)
+        results = list(h.handler({"id": "t-7", "input": {"text": "Hello.", "output_format": "wav"}}))
 
     oom = [r for r in results if r.get("error") == "oom"]
     assert oom, f"Expected oom error, got: {results}"
@@ -133,11 +134,10 @@ def test_handler_general_exception_returns_error():
     if torch is None:
         return
     h = _fresh_handler()
-    mock_pipeline = MagicMock()
-    mock_pipeline.__call__ = MagicMock(side_effect=RuntimeError("something broke"))
+    mock_pipeline = MagicMock(side_effect=RuntimeError("something broke"))
 
     with patch.object(h, "_get_pipeline", return_value=mock_pipeline):
-        results = list(h.handler({"id": "t-8", "input": {"text": "Hello."}}))
+        results = list(h.handler({"id": "t-8", "input": {"text": "Hello.", "output_format": "wav"}}))
 
     assert any("error" in r for r in results)
 
@@ -147,11 +147,10 @@ def test_handler_yields_status_events():
     if torch is None:
         return
     h = _fresh_handler()
-    mock_pipeline = MagicMock()
-    mock_pipeline.__call__ = MagicMock(side_effect=RuntimeError("stopped after status checks"))
+    mock_pipeline = MagicMock(side_effect=RuntimeError("stopped after status checks"))
 
     with patch.object(h, "_get_pipeline", return_value=mock_pipeline):
-        results = list(h.handler({"id": "t-9", "input": {"text": "Hello."}}))
+        results = list(h.handler({"id": "t-9", "input": {"text": "Hello.", "output_format": "wav"}}))
 
     statuses = [r.get("status") for r in results if "status" in r]
     assert "loading" in statuses, f"Expected 'loading' status, got: {results}"
