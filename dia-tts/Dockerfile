@@ -24,14 +24,17 @@ RUN pip install --no-cache-dir \
     --index-url https://download.pytorch.org/whl/cu128
 
 # ── dia2 ──────────────────────────────────────────────────────────────────────
-# The nari-labs/dia2 GitHub packaging is broken (installs as UNKNOWN-0.0.0).
-# Try PyPI first; fall back to git in case the PyPI package lags.
+# pyproject.toml declares torch>=2.8.0, which pip can't find on standard PyPI.
+# pip's build isolation creates a fresh env, fails to resolve that dep, and
+# produces an empty UNKNOWN-0.0.0 wheel. Fix: clone and install with
+# --no-build-isolation so pip reuses the torch we already installed above.
 # Separate layer from PyTorch so the ~2.5 GB torch layer stays cached on rebuilds.
 # hadolint ignore=DL3013,DL3059
-RUN pip install --no-cache-dir dia2 \
-    || pip install --no-cache-dir git+https://github.com/nari-labs/dia2.git
+RUN git clone --depth=1 https://github.com/nari-labs/dia2.git /tmp/dia2-src \
+    && pip install --no-cache-dir --no-build-isolation /tmp/dia2-src \
+    && rm -rf /tmp/dia2-src
 
-# Verify the import works before proceeding to the expensive model download.
+# Verify the import works before the expensive model download.
 RUN python3 -c "from dia2 import Dia2; print('[verify] dia2 import OK')"
 
 # ── Additional dependencies ───────────────────────────────────────────────────
