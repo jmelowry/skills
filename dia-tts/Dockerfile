@@ -24,13 +24,14 @@ RUN pip install --no-cache-dir \
     --index-url https://download.pytorch.org/whl/cu128
 
 # ── dia2 from GitHub ──────────────────────────────────────────────────────────
-# hadolint ignore=DL3013
+# Separate layer from PyTorch so the ~2.5 GB torch layer stays cached on rebuilds.
+# hadolint ignore=DL3013,DL3059
 RUN pip install --no-cache-dir \
     git+https://github.com/nari-labs/dia2.git
 
 # ── Additional dependencies ───────────────────────────────────────────────────
 COPY requirements.txt .
-# hadolint ignore=DL3013
+# hadolint ignore=DL3013,DL3059
 RUN pip install --no-cache-dir -r requirements.txt
 
 # ── Bake model weights at build time (~2 GB, isolated layer) ──────────────────
