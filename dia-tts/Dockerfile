@@ -24,14 +24,14 @@ RUN pip install --no-cache-dir \
     --index-url https://download.pytorch.org/whl/cu128
 
 # ── dia2 ──────────────────────────────────────────────────────────────────────
-# pyproject.toml declares torch>=2.8.0, which pip can't find on standard PyPI.
-# pip's build isolation creates a fresh env, fails to resolve that dep, and
-# produces an empty UNKNOWN-0.0.0 wheel. Fix: clone and install with
-# --no-build-isolation so pip reuses the torch we already installed above.
+# pip install (git URL or local path) produces an empty UNKNOWN-0.0.0 wheel
+# because pip's build isolation can't resolve torch>=2.8.0 (not on PyPI).
+# dia2 is pure Python — copy the package directory directly to site-packages.
 # Separate layer from PyTorch so the ~2.5 GB torch layer stays cached on rebuilds.
-# hadolint ignore=DL3013,DL3059
+# hadolint ignore=DL3059
 RUN git clone --depth=1 https://github.com/nari-labs/dia2.git /tmp/dia2-src \
-    && pip install --no-cache-dir --no-build-isolation /tmp/dia2-src \
+    && cp -r /tmp/dia2-src/dia2 \
+         "$(python3 -c 'import sysconfig; print(sysconfig.get_path("purelib"))')/dia2" \
     && rm -rf /tmp/dia2-src
 
 # Verify the import works before the expensive model download.
